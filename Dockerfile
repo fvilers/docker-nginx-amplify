@@ -1,13 +1,14 @@
 FROM nginx:1.13
 MAINTAINER NGINX Amplify Engineering
 
+COPY nginx-amplify-agent_0.46-1~jessie_armhf.deb .
+
 # Install the NGINX Amplify Agent
 RUN apt-get update \
     && apt-get install -qqy curl python apt-transport-https apt-utils gnupg1 procps \
-    && echo 'deb https://packages.amplify.nginx.com/debian/ stretch amplify-agent' > /etc/apt/sources.list.d/nginx-amplify.list \
-    && curl -fs https://nginx.org/keys/nginx_signing.key | apt-key add - > /dev/null 2>&1 \
-    && apt-get update \
-    && apt-get install -qqy nginx-amplify-agent \
+    && apt-get install -qqy lsb-release \
+    && dpkg -i nginx-amplify-agent_0.46-1~jessie_armhf.deb \
+    && apt-get install -f \
     && apt-get purge -qqy curl apt-transport-https apt-utils gnupg1 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -19,7 +20,9 @@ RUN unlink /var/log/nginx/access.log \
     && chown nginx /var/log/nginx/*log \
     && chmod 644 /var/log/nginx/*log
 
-# Copy nginx stub_status config
+# Copy nginx config
+COPY nginx.conf /etc/nginx
+COPY ./conf.d/default.conf /etc/nginx.conf.d
 COPY ./conf.d/stub_status.conf /etc/nginx/conf.d
 
 # API_KEY is required for configuring the NGINX Amplify Agent.
